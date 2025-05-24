@@ -7,63 +7,60 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>왼쪽/오른쪽 분류 인공지능</title>
+  <title>왼쪽/오른쪽 식별 인공지능</title>
   <style>
     body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #f0f4f8, #dbeafe);
       margin: 0;
       padding: 0;
-      font-family: "Segoe UI", sans-serif;
-      background: linear-gradient(135deg, #f0f4f8, #dbeafe);
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
+      height: 100vh;
     }
 
     .container {
       background-color: white;
-      border-radius: 16px;
       padding: 2rem;
+      border-radius: 16px;
       box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
       text-align: center;
-      max-width: 420px;
-      width: 90%;
+      width: 400px;
     }
 
     h1 {
-      color: #1e40af;
       font-size: 1.8rem;
+      color: #1e3a8a;
       margin-bottom: 0.5rem;
     }
 
     p {
       font-size: 1rem;
-      color: #4b5563;
+      color: #475569;
       margin-bottom: 1.5rem;
     }
 
     button {
       background-color: #3b82f6;
       color: white;
-      font-size: 1rem;
-      padding: 0.6rem 1.2rem;
       border: none;
+      padding: 0.6rem 1.2rem;
+      font-size: 1rem;
       border-radius: 8px;
       cursor: pointer;
-      margin-bottom: 1.5rem;
+      margin-bottom: 1rem;
     }
 
     button:hover {
       background-color: #2563eb;
     }
 
-    #webcam-container canvas {
-      border-radius: 12px;
+    #webcam-container {
       margin-bottom: 1rem;
-      max-width: 100%;
     }
 
-    #result {
+    #label-container {
       font-size: 1.3rem;
       font-weight: bold;
       color: #059669;
@@ -72,77 +69,57 @@
 </head>
 <body>
 
-  <div class="container">
-    <h1>왼쪽/오른쪽 분류 인공지능</h1>
-    <p>왼쪽 또는 오른쪽으로 고개를 기울여 보세요.</p>
-    <button onclick="init()">AI 시작하기</button>
-    <div id="webcam-container"></div>
-    <div id="result">예측 결과가 여기에 표시됩니다</div>
-  </div>
+<div class="container">
+  <h1>왼쪽/오른쪽 식별 인공지능</h1>
+  <p>고개를 옆으로 기울여 보세요</p>
+  <button type="button" onclick="init()">Start</button>
+  <div id="webcam-container"></div>
+  <div id="label-container">결과가 여기에 표시됩니다</div>
+</div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
-  <script>
-    const URL = "https://teachablemachine.withgoogle.com/models/RgvMEoCmb/";
-    let model, webcam, maxPredictions;
-    let lastSpoken = "";
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+<script>
+  const URL = "https://teachablemachine.withgoogle.com/models/RgvMEoCmb/";
+  let model, webcam, labelContainer, maxPredictions;
 
-    async function init() {
-      const modelURL = URL + "model.json";
-      const metadataURL = URL + "metadata.json";
+  async function init() {
+    const modelURL = URL + "model.json";
+    const metadataURL = URL + "metadata.json";
 
-      model = await tmImage.load(modelURL, metadataURL);
-      maxPredictions = model.getTotalClasses();
+    model = await tmImage.load(modelURL, metadataURL);
+    maxPredictions = model.getTotalClasses();
 
-      webcam = new tmImage.Webcam(300, 300, true);
-      await webcam.setup();
-      await webcam.play();
-      window.requestAnimationFrame(loop);
+    webcam = new tmImage.Webcam(300, 300, true);
+    await webcam.setup();
+    await webcam.play();
+    window.requestAnimationFrame(loop);
 
-      document.getElementById("webcam-container").appendChild(webcam.canvas);
+    document.getElementById("webcam-container").appendChild(webcam.canvas);
+    labelContainer = document.getElementById("label-container");
+  }
+
+  async function loop() {
+    webcam.update();
+    await predict();
+    window.requestAnimationFrame(loop);
+  }
+
+  async function predict() {
+    const prediction = await model.predict(webcam.canvas);
+    let left = prediction.find(p => p.className.toLowerCase().includes("left"));
+    let right = prediction.find(p => p.className.toLowerCase().includes("right"));
+
+    if (left && left.probability > 0.5) {
+      labelContainer.innerText = "왼쪽";
+    } else if (right && right.probability > 0.5) {
+      labelContainer.innerText = "오른쪽";
+    } else {
+      labelContainer.innerText = "고개를 옆으로 기울여 보세요";
     }
+  }
+</script>
 
-    async function loop() {
-      webcam.update();
-      await predict();
-      window.requestAnimationFrame(loop);
-    }
-
-    function speak(text) {
-      if (text !== lastSpoken) {
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = "ko-KR";
-        window.speechSynthesis.speak(utterance);
-        lastSpoken = text;
-      }
-    }
-
-    async function predict() {
-      const prediction = await model.predict(webcam.canvas);
-      let leftProb = 0;
-      let rightProb = 0;
-
-      for (let pred of prediction) {
-        if (pred.className.toLowerCase().includes("left")) {
-          leftProb = pred.probability;
-        }
-        if (pred.className.toLowerCase().includes("right")) {
-          rightProb = pred.probability;
-        }
-      }
-
-      let resultText = "고개를 옆으로 기울여 보세요.";
-
-      if (leftProb > 0.5) {
-        resultText = "왼쪽";
-      } else if (rightProb > 0.5) {
-        resultText = "오른쪽";
-      }
-
-      document.getElementById("result").innerText = resultText;
-      speak(resultText);
-    }
-  </script>
 </body>
 </html>
 </body>
