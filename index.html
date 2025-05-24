@@ -86,6 +86,7 @@
   <script>
     const URL = "https://teachablemachine.withgoogle.com/models/RgvMEoCmb/";
     let model, webcam, maxPredictions;
+    let lastResult = ""; // 마지막으로 예측한 값 저장
 
     async function init() {
       const modelURL = URL + "model.json";
@@ -129,9 +130,25 @@
       }
 
       document.getElementById("result-display").innerText = resultText;
+
+      // 이전 결과와 다르면 음성 출력
+      if (resultText !== lastResult && (resultText === "왼쪽" || resultText === "오른쪽")) {
+        speak(resultText);
+        lastResult = resultText;
+      }
+    }
+
+    function speak(text) {
+      const synth = window.speechSynthesis;
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = "ko-KR";
+      synth.cancel(); // 이전 음성 취소
+      synth.speak(utter);
     }
   </script>
 
+</body>
+</html>
 </body>
 </html>
 </body>
