@@ -131,17 +131,16 @@
         }
       }
 
-      let resultText = "정확한 자세를 유지해 주세요.";
+      let resultText = "고개를 옆으로 기울여 보세요.";
 
       if (leftProb > 0.5) {
         resultText = "왼쪽";
-        speak("왼쪽");
       } else if (rightProb > 0.5) {
         resultText = "오른쪽";
-        speak("오른쪽");
       }
 
       document.getElementById("result").innerText = resultText;
+      speak(resultText);
     }
   </script>
 </body>
