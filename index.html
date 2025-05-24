@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -12,10 +13,17 @@
             justify-content: center;
             height: 100vh;
             margin: 0;
+            text-align: center;
         }
 
         h1 {
             color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .description {
+            font-size: 16px;
+            color: #555;
             margin-bottom: 20px;
         }
 
@@ -60,6 +68,7 @@
 </head>
 <body>
     <h1>👀 왼쪽/오른쪽 식별 인공지능</h1>
+    <p class="description">🤖 고개를 좌우로 움직여 AI가 인식하는지 확인해 보세요!</p>
     <button type="button" onclick="init()">Start</button>
     <div id="webcam-container"></div>
     <div id="label-container"></div>
