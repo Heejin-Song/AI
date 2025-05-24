@@ -71,7 +71,7 @@
 
 <div class="container">
   <h1>왼쪽/오른쪽 식별 인공지능</h1>
-  <p>고개를 옆으로 기울여 보세요</p>
+  <p>왼쪽 또는 오른쪽으로 고개를 기울여 보세요.</p>
   <button type="button" onclick="init()">Start</button>
   <div id="webcam-container"></div>
   <div id="label-container">결과가 여기에 표시됩니다</div>
@@ -79,7 +79,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
-<script>
+<script type="text/javascript">
   const URL = "https://teachablemachine.withgoogle.com/models/RgvMEoCmb/";
   let model, webcam, labelContainer, maxPredictions;
 
@@ -115,12 +115,13 @@
     } else if (right && right.probability > 0.5) {
       labelContainer.innerText = "오른쪽";
     } else {
-      labelContainer.innerText = "고개를 옆으로 기울여 보세요";
+      labelContainer.innerText = "고개를 옆으로 기울여 보세요.";
     }
   }
 </script>
 
 </body>
 </html>
+
 </body>
 </html>
