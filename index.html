@@ -112,7 +112,6 @@
     async function predict() {
       const prediction = await model.predict(webcam.canvas);
 
-      // 가장 확률이 높은 클래스 선택
       let best = prediction[0];
       for (let i = 1; i < prediction.length; i++) {
         if (prediction[i].probability > best.probability) {
@@ -133,6 +132,8 @@
     }
   </script>
 
+</body>
+</html>
 </body>
 </html>
 </body>
