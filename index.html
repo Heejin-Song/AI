@@ -6,33 +6,34 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <title>왼쪽/오른쪽 식별 인공지능</title>
+  <meta charset="UTF-8">
+  <title>왼쪽/오른쪽 분류 인공지능</title>
   <style>
     body {
-      font-family: 'Arial', sans-serif;
-      background-color: #f0f4f8;
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #f0f4f8, #dbeafe);
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      margin: 0;
     }
 
     .container {
-      background-color: #ffffff;
+      background-color: white;
       border-radius: 16px;
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
       padding: 2rem;
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
       text-align: center;
-      max-width: 400px;
-      width: 100%;
+      max-width: 420px;
+      width: 90%;
     }
 
     h1 {
-      font-size: 1.5rem;
+      color: #1e40af;
+      font-size: 1.8rem;
       margin-bottom: 0.5rem;
-      color: #1f2937;
     }
 
     p {
@@ -42,10 +43,10 @@
     }
 
     button {
-      background-color: #2563eb;
+      background-color: #3b82f6;
       color: white;
-      padding: 0.7rem 1.5rem;
       font-size: 1rem;
+      padding: 0.6rem 1.2rem;
       border: none;
       border-radius: 8px;
       cursor: pointer;
@@ -53,38 +54,38 @@
     }
 
     button:hover {
-      background-color: #1d4ed8;
+      background-color: #2563eb;
     }
 
     #webcam-container canvas {
-      border-radius: 8px;
+      border-radius: 12px;
       margin-bottom: 1rem;
+      max-width: 100%;
     }
 
     #result {
-      font-size: 1.25rem;
+      font-size: 1.3rem;
       font-weight: bold;
-      color: #10b981;
+      color: #059669;
     }
   </style>
 </head>
 <body>
 
   <div class="container">
-    <h1>왼쪽/오른쪽 식별 인공지능</h1>
+    <h1>왼쪽/오른쪽 분류 인공지능</h1>
     <p>왼쪽 또는 오른쪽으로 고개를 기울여 보세요.</p>
     <button onclick="init()">AI 시작하기</button>
     <div id="webcam-container"></div>
-    <div id="result">결과가 여기에 표시됩니다</div>
+    <div id="result">예측 결과가 여기에 표시됩니다</div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
   <script>
     const URL = "https://teachablemachine.withgoogle.com/models/RgvMEoCmb/";
-
     let model, webcam, maxPredictions;
-    let lastLabel = "";
+    let lastSpoken = "";
 
     async function init() {
       const modelURL = URL + "model.json";
@@ -93,8 +94,7 @@
       model = await tmImage.load(modelURL, metadataURL);
       maxPredictions = model.getTotalClasses();
 
-      const flip = true;
-      webcam = new tmImage.Webcam(300, 300, flip);
+      webcam = new tmImage.Webcam(300, 300, true);
       await webcam.setup();
       await webcam.play();
       window.requestAnimationFrame(loop);
@@ -109,33 +109,39 @@
     }
 
     function speak(text) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "ko-KR"; // 한국어로 설정
-      window.speechSynthesis.speak(utterance);
+      if (text !== lastSpoken) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = "ko-KR";
+        window.speechSynthesis.speak(utterance);
+        lastSpoken = text;
+      }
     }
 
     async function predict() {
       const prediction = await model.predict(webcam.canvas);
-      let bestPrediction = prediction[0];
+      let leftProb = 0;
+      let rightProb = 0;
 
-      for (let i = 1; i < prediction.length; i++) {
-        if (prediction[i].probability > bestPrediction.probability) {
-          bestPrediction = prediction[i];
+      for (let pred of prediction) {
+        if (pred.className.toLowerCase().includes("left")) {
+          leftProb = pred.probability;
+        }
+        if (pred.className.toLowerCase().includes("right")) {
+          rightProb = pred.probability;
         }
       }
 
-      let result = "결과 없음";
-      if (bestPrediction.className.toLowerCase().includes("left")) {
-        result = "왼쪽";
-      } else if (bestPrediction.className.toLowerCase().includes("right")) {
-        result = "오른쪽";
+      let resultText = "정확한 자세를 유지해 주세요.";
+
+      if (leftProb > 0.5) {
+        resultText = "왼쪽";
+        speak("왼쪽");
+      } else if (rightProb > 0.5) {
+        resultText = "오른쪽";
+        speak("오른쪽");
       }
 
-      if (result !== lastLabel && result !== "결과 없음") {
-        document.getElementById("result").innerText = result;
-        speak(result); // 음성 출력
-        lastLabel = result;
-      }
+      document.getElementById("result").innerText = resultText;
     }
   </script>
 </body>
